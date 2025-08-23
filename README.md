@@ -124,19 +124,6 @@ The library uses TypeScript for type safety and includes comprehensive type defi
 - [roblox-ts](https://roblox-ts.com/) - TypeScript-to-Luau compiler
 - TypeScript - Development dependency
 
-## Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Watch for changes
-npm run watch
-```
-
 ## License
 
 ISC
