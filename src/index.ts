@@ -79,9 +79,7 @@ export default abstract class AccessController {
 
 	/** Returns a boolean indicating wether or not a player has lock down bypass */
 	public static PlayerHasLockDownBypass(player: Player): boolean {
-		const keyCards = this.GetPlayerKeyCards(player);
-
-		for (const keyCard of keyCards) {
+		for (const keyCard of this.GetPlayerKeyCards(player)) {
 			if (keyCard.KeyCardConfig.LockDownBypass.Value) return true;
 		}
 
@@ -95,23 +93,15 @@ export default abstract class AccessController {
 			return false;
 		}
 
-		//  Deny access if gatekeeper is jammed
 		if (gatekeeper.GatekeeperConfig.Jammed.Value) return false;
-
-		// Deny access if gatekeeper is locked down and player lacks bypass
 		if (gatekeeper.GatekeeperConfig.LockDown.Value && !this.PlayerHasLockDownBypass(player)) return false;
-
-		// Grant access if player's clearance level meets or exceeds gatekeeper's
 		if (this.GetPlayerClearanceLevel(player) >= this.GetGatekeeperClearanceLevel(gatekeeper)) return true;
 
-		// Grant access if player has a keycard that the gatekeeper accepts
 		const gatekeeperCards = this.GetGatekeeperKeyCards(gatekeeper);
-
 		for (const keyCard of this.GetPlayerKeyCards(player)) {
 			if (gatekeeperCards.includes(keyCard.Name)) return true;
 		}
 
-		// Deny access if no conditions are met
 		return false;
 	}
 }
