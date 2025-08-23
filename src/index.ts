@@ -1,39 +1,26 @@
 import { t } from "@rbxts/t";
-
-const keycardValidator = t.intersection(
-	t.instanceIsA("Tool"),
-	t.interface({
-		KeyCardConfig: t.intersection(
-			t.instanceIsA("Configuration"),
-			t.interface({
-				Level: t.instanceIsA("NumberValue"),
-				LockDownBypass: t.instanceIsA("BoolValue"),
-			})
-		),
-	})
-);
-
-const gatekeeperValidator = t.intersection(
-	t.instanceIsA("Instance"),
-	t.interface({
-		GatekeeperConfig: t.intersection(
-			t.instanceIsA("Configuration"),
-			t.interface({
-				Open: t.instanceIsA("BoolValue"),
-				LockDown: t.instanceIsA("BoolValue"),
-				Jammed: t.instanceIsA("BoolValue"),
-				Clearance: t.instanceIsA("NumberValue"),
-				KeyCards: t.instanceIsA("Folder"),
-			})
-		),
-	})
-);
-
-const KEY_CARD_TAG = "KeyCard";
+import Constants from "Constants";
+import Validators from "Validators";
 
 export default abstract class AccessController {
 	protected static _getPlayerBackpackContents(player: Player): Instance[] {
 		return player.FindFirstChildOfClass("Backpack")?.GetChildren() ?? [];
+	}
+
+	public static IsAKeyCard(keyCard: unknown): keyCard is KeyCard {
+		if (!t.instanceIsA("Tool")(keyCard)) return false;
+		if (!keyCard.HasTag(Constants.KEY_CARD_TAG)) return false;
+		if (!Validators.KeyCardValidator(keyCard)) return false;
+
+		return true;
+	}
+
+	public static IsAGatekeeper(gatekeeper: unknown): gatekeeper is Gatekeeper {
+		if (!t.instanceIsA("Instance")(gatekeeper)) return false;
+		if (!gatekeeper.HasTag(Constants.GATEKEEPER_TAG)) return false;
+		if (!Validators.GatekeeperValidator(gatekeeper)) return false;
+
+		return true;
 	}
 
 	/** Returns highest clearance level the player has */
@@ -41,8 +28,7 @@ export default abstract class AccessController {
 		let highestLevel = 0;
 
 		for (const tool of this._getPlayerBackpackContents(player)) {
-			if (!tool.HasTag(KEY_CARD_TAG)) continue;
-			if (!keycardValidator(tool)) continue;
+			if (!this.IsAKeyCard(tool)) continue;
 
 			highestLevel = math.max(highestLevel, tool.KeyCardConfig.Level.Value);
 		}
@@ -55,8 +41,7 @@ export default abstract class AccessController {
 		const keyCards: KeyCard[] = [];
 
 		for (const tool of this._getPlayerBackpackContents(player)) {
-			if (!tool.HasTag(KEY_CARD_TAG)) continue;
-			if (!keycardValidator(tool)) continue;
+			if (!this.IsAKeyCard(tool)) continue;
 
 			keyCards.push(tool);
 		}
@@ -66,7 +51,7 @@ export default abstract class AccessController {
 
 	/** Returns the clearance level of the gatekeeper instance */
 	public static GetGatekeeperClearanceLevel(gatekeeper: Gatekeeper): number {
-		if (!gatekeeperValidator(gatekeeper)) {
+		if (!this.IsAGatekeeper(gatekeeper)) {
 			warn("Invalid gatekeeper provided in 'GetGatekeeperClearanceLevel'");
 			return 0;
 		}
@@ -76,7 +61,7 @@ export default abstract class AccessController {
 
 	/** Returns an array of KeyCards the gatekeeper accepts */
 	public static GetGatekeeperKeyCards(gatekeeper: Gatekeeper): string[] {
-		if (!gatekeeperValidator(gatekeeper)) {
+		if (!this.IsAGatekeeper(gatekeeper)) {
 			warn("Invalid gatekeeper provided in 'GetGatekeeperKeyCards'");
 			return [];
 		}
@@ -105,7 +90,7 @@ export default abstract class AccessController {
 
 	/** Returns a boolean indicating wether or not a player has access */
 	public static PlayerHasAccess(player: Player, gatekeeper: Gatekeeper): boolean {
-		if (!gatekeeperValidator(gatekeeper)) {
+		if (!this.IsAGatekeeper(gatekeeper)) {
 			warn("Invalid gatekeeper provided to 'PlayerHasAccess'");
 			return false;
 		}
