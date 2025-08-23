@@ -1,0 +1,132 @@
+import { t } from "@rbxts/t";
+
+const keycardValidator = t.intersection(
+	t.instanceIsA("Tool"),
+	t.interface({
+		KeyCardConfig: t.intersection(
+			t.instanceIsA("Configuration"),
+			t.interface({
+				Level: t.instanceIsA("NumberValue"),
+				LockDownBypass: t.instanceIsA("BoolValue"),
+			})
+		),
+	})
+);
+
+const gatekeeperValidator = t.intersection(
+	t.instanceIsA("Instance"),
+	t.interface({
+		GatekeeperConfig: t.intersection(
+			t.instanceIsA("Configuration"),
+			t.interface({
+				Open: t.instanceIsA("BoolValue"),
+				LockDown: t.instanceIsA("BoolValue"),
+				Jammed: t.instanceIsA("BoolValue"),
+				Clearance: t.instanceIsA("NumberValue"),
+				KeyCards: t.instanceIsA("Folder"),
+			})
+		),
+	})
+);
+
+const KEY_CARD_TAG = "KeyCard";
+
+export default abstract class AccessController {
+	protected static _getPlayerBackpackContents(player: Player): Instance[] {
+		return player.FindFirstChildOfClass("Backpack")?.GetChildren() ?? [];
+	}
+
+	/** Returns highest clearance level the player has */
+	public static GetPlayerClearanceLevel(player: Player): number {
+		let highestLevel = 0;
+
+		for (const tool of this._getPlayerBackpackContents(player)) {
+			if (!tool.HasTag(KEY_CARD_TAG)) continue;
+			if (!keycardValidator(tool)) continue;
+
+			highestLevel = math.max(highestLevel, tool.KeyCardConfig.Level.Value);
+		}
+
+		return highestLevel;
+	}
+
+	/** Returns an array of KeyCard instances the player has in their backpack */
+	public static GetPlayerKeyCards(player: Player): KeyCard[] {
+		const keyCards: KeyCard[] = [];
+
+		for (const tool of this._getPlayerBackpackContents(player)) {
+			if (!tool.HasTag(KEY_CARD_TAG)) continue;
+			if (!keycardValidator(tool)) continue;
+
+			keyCards.push(tool);
+		}
+
+		return keyCards;
+	}
+
+	/** Returns the clearance level of the gatekeeper instance */
+	public static GetGatekeeperClearanceLevel(gatekeeper: Gatekeeper): number {
+		if (!gatekeeperValidator(gatekeeper)) {
+			warn("Invalid gatekeeper provided in 'GetGatekeeperClearanceLevel'");
+			return 0;
+		}
+
+		return gatekeeper.GatekeeperConfig.Clearance.Value;
+	}
+
+	/** Returns an array of KeyCards the gatekeeper accepts */
+	public static GetGatekeeperKeyCards(gatekeeper: Gatekeeper): string[] {
+		if (!gatekeeperValidator(gatekeeper)) {
+			warn("Invalid gatekeeper provided in 'GetGatekeeperKeyCards'");
+			return [];
+		}
+
+		const gatekeeperKeyCards: string[] = [];
+
+		for (const stringValue of gatekeeper.GatekeeperConfig.KeyCards.GetChildren()) {
+			if (!stringValue.IsA("StringValue")) continue;
+
+			gatekeeperKeyCards.push(stringValue.Value);
+		}
+
+		return gatekeeperKeyCards;
+	}
+
+	/** Returns a boolean indicating wether or not a player has lock down bypass */
+	public static PlayerHasLockDownBypass(player: Player): boolean {
+		const keyCards = this.GetPlayerKeyCards(player);
+
+		for (const keyCard of keyCards) {
+			if (keyCard.KeyCardConfig.LockDownBypass.Value) return true;
+		}
+
+		return false;
+	}
+
+	/** Returns a boolean indicating wether or not a player has access */
+	public static PlayerHasAccess(player: Player, gatekeeper: Gatekeeper): boolean {
+		if (!gatekeeperValidator(gatekeeper)) {
+			warn("Invalid gatekeeper provided to 'PlayerHasAccess'");
+			return false;
+		}
+
+		//  Deny access if gatekeeper is jammed
+		if (gatekeeper.GatekeeperConfig.Jammed.Value) return false;
+
+		// Deny access if gatekeeper is locked down and player lacks bypass
+		if (gatekeeper.GatekeeperConfig.LockDown.Value && !this.PlayerHasLockDownBypass(player)) return false;
+
+		// Grant access if player's clearance level meets or exceeds gatekeeper's
+		if (this.GetPlayerClearanceLevel(player) >= this.GetGatekeeperClearanceLevel(gatekeeper)) return true;
+
+		// Grant access if player has a keycard that the gatekeeper accepts
+		const gatekeeperCards = this.GetGatekeeperKeyCards(gatekeeper);
+
+		for (const keyCard of this.GetPlayerKeyCards(player)) {
+			if (gatekeeperCards.includes(keyCard.Name)) return true;
+		}
+
+		// Deny access if no conditions are met
+		return false;
+	}
+}
