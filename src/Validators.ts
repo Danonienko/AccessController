@@ -20,9 +20,6 @@ export default {
 			GatekeeperConfig: t.intersection(
 				t.instanceIsA("Configuration"),
 				t.interface({
-					Open: t.instanceIsA("BoolValue"),
-					LockDown: t.instanceIsA("BoolValue"),
-					Jammed: t.instanceIsA("BoolValue"),
 					Clearance: t.instanceIsA("NumberValue"),
 					KeyCards: t.instanceIsA("Folder"),
 				})

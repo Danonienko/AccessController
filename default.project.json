@@ -1,5 +1,5 @@
 {
-	"name": "roblox-ts-model",
+	"name": "ClearanceController",
 	"globIgnorePaths": [
 		"**/package.json",
 		"**/tsconfig.json"

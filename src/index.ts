@@ -2,23 +2,23 @@ import { t } from "@rbxts/t";
 import Constants from "Constants";
 import Validators from "Validators";
 
-export default abstract class AccessController {
+export default abstract class ClearanceController {
 	protected static _getPlayerBackpackContents(player: Player): Instance[] {
 		return player.FindFirstChildOfClass("Backpack")?.GetChildren() ?? [];
 	}
 
-	public static IsAKeyCard(keyCard: unknown): keyCard is KeyCard {
-		if (!t.instanceIsA("Tool")(keyCard)) return false;
-		if (!keyCard.HasTag(Constants.KEY_CARD_TAG)) return false;
-		if (!Validators.KeyCardValidator(keyCard)) return false;
+	public static IsAKeyCard(tool: unknown): tool is KeyCard {
+		if (!t.instanceIsA("Tool")(tool)) return false;
+		if (!tool.HasTag(Constants.KEY_CARD_TAG)) return false;
+		if (!Validators.KeyCardValidator(tool)) return false;
 
 		return true;
 	}
 
-	public static IsAGatekeeper(gatekeeper: unknown): gatekeeper is Gatekeeper {
-		if (!t.instanceIsA("Instance")(gatekeeper)) return false;
-		if (!gatekeeper.HasTag(Constants.GATEKEEPER_TAG)) return false;
-		if (!Validators.GatekeeperValidator(gatekeeper)) return false;
+	public static IsAGatekeeper(instance: unknown): instance is Gatekeeper {
+		if (!t.instanceIsA("Instance")(instance)) return false;
+		if (!instance.HasTag(Constants.GATEKEEPER_TAG)) return false;
+		if (!Validators.GatekeeperValidator(instance)) return false;
 
 		return true;
 	}
@@ -36,13 +36,12 @@ export default abstract class AccessController {
 		return highestLevel;
 	}
 
-	/** Returns an array of KeyCard instances the player has in their backpack */
+	/** Returns an array of keycard tool instances the player has in their backpack */
 	public static GetPlayerKeyCards(player: Player): KeyCard[] {
 		const keyCards: KeyCard[] = [];
 
 		for (const tool of this._getPlayerBackpackContents(player)) {
 			if (!this.IsAKeyCard(tool)) continue;
-
 			keyCards.push(tool);
 		}
 
@@ -77,24 +76,8 @@ export default abstract class AccessController {
 		return gatekeeperKeyCards;
 	}
 
-	/** Returns a boolean indicating wether or not a player has lock down bypass */
-	public static PlayerHasLockDownBypass(player: Player): boolean {
-		for (const keyCard of this.GetPlayerKeyCards(player)) {
-			if (keyCard.KeyCardConfig.LockDownBypass.Value) return true;
-		}
-
-		return false;
-	}
-
-	/** Returns a boolean indicating wether or not a player has access */
-	public static PlayerHasAccess(player: Player, gatekeeper: Gatekeeper): boolean {
-		if (!this.IsAGatekeeper(gatekeeper)) {
-			warn("Invalid gatekeeper provided to 'PlayerHasAccess'");
-			return false;
-		}
-
-		if (gatekeeper.GatekeeperConfig.Jammed.Value) return false;
-		if (gatekeeper.GatekeeperConfig.LockDown.Value && !this.PlayerHasLockDownBypass(player)) return false;
+	/** Returns a boolean indicating wether or not a player has clearance */
+	public static PlayerHasClearance(player: Player, gatekeeper: Gatekeeper): boolean {
 		if (this.GetPlayerClearanceLevel(player) >= this.GetGatekeeperClearanceLevel(gatekeeper)) return true;
 
 		const gatekeeperCards = this.GetGatekeeperKeyCards(gatekeeper);
