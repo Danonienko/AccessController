@@ -1,67 +1,80 @@
-# Clearance Controller
+# Clearance Controller System
 
-The Clearance Controller is a TypeScript module designed for Roblox games to manage player access through a clearance-based system. It allows developers to control access to specific areas or actions by verifying players' clearance levels and keycards against gatekeeper requirements.
+This TypeScript-based system, designed for the Roblox platform, manages access control through a clearance-based mechanism using keycards and gatekeepers. It allows developers to check if players have sufficient clearance levels or specific keycards to access restricted areas or resources guarded by gatekeepers.
 
 ## Overview
 
-The module provides a `ClearanceController` class that implements the `IClearanceController` interface. It facilitates checking if players have the necessary clearance or keycards to access restricted areas guarded by gatekeepers. The system uses a tag-based approach combined with configuration validation to ensure robust access control.
+The **ClearanceController** is an abstract class providing static methods to validate and manage interactions between players, keycards, and gatekeepers. It relies on predefined constants, type validators, and type definitions to ensure robust type safety and functionality within a Roblox game environment.
 
-## Features
+### Key Components
 
-- **Player Clearance Check**: Determines the highest clearance level a player possesses based on keycards in their backpack.
-- **Keycard Validation**: Verifies if a tool is a valid keycard with the required configuration.
-- **Gatekeeper Validation**: Confirms if an instance is a valid gatekeeper with appropriate configuration.
-- **Access Control**: Checks if a player has sufficient clearance or specific keycards to pass a gatekeeper.
-- **Type Safety**: Utilizes TypeScript and the `@rbxts/t` library for runtime type checking to ensure robust validation.
+- **Constants.ts**: Defines tags used to identify keycards and gatekeepers.
+- **Validators.ts**: Contains type validators to ensure objects meet the structural requirements for keycards and gatekeepers.
+- **ClearanceController.d.ts**: TypeScript declaration file defining the types for `KeyCard`, `Gatekeeper`, and their configurations.
+- **index.ts**: Core logic implementing the clearance control system with methods to check player clearance, retrieve keycards, and validate gatekeeper interactions.
+
+## File Structure
+
+- `Constants.ts`: Defines constant tags for keycards and gatekeepers.
+- `Validators.ts`: Provides type-checking utilities using the `@rbxts/t` library.
+- `ClearanceController.d.ts`: Declares TypeScript interfaces for `KeyCard` and `Gatekeeper`.
+- `index.ts`: Implements the `ClearanceController` class with static methods for clearance checks and keycard/gatekeeper management.
 
 ## Installation
 
-1. **Add to Project**: Place the provided files (`Constants.ts`, `index.ts`, `ClearanceController.d.ts`, `Validators.ts`) in your Roblox project's TypeScript source directory.
-2. **Install Dependencies**:
-   - Ensure you have the `@rbxts/t` library installed for type checking.
-   - Use a Roblox TypeScript compiler (e.g., `rbxtsc`) to compile the TypeScript code into Lua for Roblox.
-3. **Sync with Roblox**: Use a tool like Rojo to sync the compiled code into your Roblox project.
+1. Ensure you have a Roblox TypeScript project set up with the `@rbxts/t` library installed for type validation.
+2. Place the provided files (`Constants.ts`, `Validators.ts`, `ClearanceController.d.ts`, `index.ts`) in your project's source directory.
+3. Configure your Roblox game to include the necessary object hierarchy (e.g., `Tool` instances for keycards, `Configuration` instances for keycard and gatekeeper settings).
 
 ## Usage
 
-### Setting Up KeyCards and Gatekeepers
+### Key Concepts
 
-1. **KeyCard Setup**:
+- **KeyCard**: A `Tool` instance tagged with `KeyCard` and containing a `KeyCardConfig` (`Configuration` with a `Level` NumberValue).
+- **Gatekeeper**: An `Instance` tagged with `Gatekeeper` and containing a `GatekeeperConfig` (`Configuration` with a `Clearance` NumberValue and a `KeyCards` Folder).
+- **Clearance Level**: A numerical value representing the access level of a keycard or the required level for a gatekeeper.
+- **KeyCard Validation**: Ensures a tool is a valid keycard using tags and structural checks.
+- **Gatekeeper Validation**: Ensures an instance is a valid gatekeeper with the correct configuration.
+
+### Example Setup in Roblox
+
+1. **Create a KeyCard**:
    - Create a `Tool` instance in Roblox Studio.
-   - Add a tag named `KeyCard` (as defined in `Constants.ts`) to the tool.
-   - Add a `Configuration` instance named `KeyCardConfig` as a child of the tool.
-   - Inside `KeyCardConfig`, add a `NumberValue` named `Level` to specify the clearance level (e.g., `1`, `2`, etc.).
+   - Add a tag named `KeyCard` (as defined in `Constants.ts`).
+   - Add a `Configuration` child named `KeyCardConfig`.
+   - Inside `KeyCardConfig`, add a `NumberValue` named `Level` with a value (e.g., `5`).
 
-2. **Gatekeeper Setup**:
-   - Create an `Instance` (e.g., a `Model` or `Part`) in Roblox Studio.
-   - Add a tag named `Gatekeeper` (as defined in `Constants.ts`) to the instance.
-   - Add a `Configuration` instance named `GatekeeperConfig` as a child of the instance.
+2. **Create a Gatekeeper**:
+   - Create an `Instance` (e.g., a `Part` or `Model`) in Roblox Studio.
+   - Add a tag named `Gatekeeper`.
+   - Add a `Configuration` child named `GatekeeperConfig`.
    - Inside `GatekeeperConfig`, add:
-     - A `NumberValue` named `Clearance` to specify the minimum clearance level required.
-     - A `Folder` named `KeyCards` containing `StringValue` instances, each representing the name of an accepted keycard.
+     - A `NumberValue` named `Clearance` with a value (e.g., `3`).
+     - A `Folder` named `KeyCards` containing `StringValue` instances, each with a `Value` corresponding to the name of an acceptable keycard (e.g., `KeyCard1`).
+
+3. **Integrate ClearanceController**:
+   - Use the `ClearanceController` class in your scripts to check if a player can access a gatekeeper-protected area.
 
 ### Example Code
 
-```typescript
-import ClearanceController from "path/to/ClearanceController";
+```ts
+import ClearanceController from "index";
+import { Players } from "@rbxts/services";
 
-// Instantiate the controller
-const clearanceController = new ClearanceController();
+// Example: Check if a player can access a gatekeeper
+const player = Players.GetPlayers()[0];
+const gatekeeper = game.Workspace.FindFirstChild("GatekeeperPart")!;
 
-// Check if a player can pass a gatekeeper
-const player: Player = game.Players.GetPlayers()[0]; // Example player
-const gatekeeper: Gatekeeper = game.Workspace.Gatekeeper; // Example gatekeeper instance
-
-if (clearanceController.PlayerHasClearance(player, gatekeeper)) {
-    print(`${player.Name} has clearance to pass the gatekeeper!`);
+if (ClearanceController.PlayerHasClearance(player, gatekeeper)) {
+    print(`${player.Name} has access to the gatekeeper!`);
 } else {
     print(`${player.Name} does not have sufficient clearance.`);
 }
 
-// Get player's highest clearance level
-const clearanceLevel = clearanceController.GetPlayerClearanceLevel(player);
+// Example: Get player's highest clearance level
+const clearanceLevel = ClearanceController.GetPlayerClearanceLevel(player);
 print(`${player.Name}'s highest clearance level: ${clearanceLevel}`);
 
-// Get accepted keycards for a gatekeeper
-const keyCards = clearanceController.GetGatekeeperKeyCards(gatekeeper);
-print(`Gatekeeper accepts keycards: ${keyCards.join(", ")}`);
+// Example: Get accepted keycards for a gatekeeper
+const acceptedKeyCards = ClearanceController.GetGatekeeperKeyCards(gatekeeper);
+print(`Gatekeeper accepts keycards: ${acceptedKeyCards.join(", ")}`);
