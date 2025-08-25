@@ -1,6 +1,5 @@
 declare type KeyCardConfig = Configuration & {
 	Level: NumberValue;
-	LockDownBypass: BoolValue;
 };
 
 declare type GatekeeperConfig = Configuration & {

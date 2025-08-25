@@ -8,7 +8,6 @@ export default {
 				t.instanceIsA("Configuration"),
 				t.interface({
 					Level: t.instanceIsA("NumberValue"),
-					LockDownBypass: t.instanceIsA("BoolValue"),
 				})
 			),
 		})

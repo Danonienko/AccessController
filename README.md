@@ -36,13 +36,8 @@ local level = Instance.new("NumberValue")
 level.Name = "Level"
 level.Value = 5  -- Set clearance level
 
-local bypass = Instance.new("BoolValue")
-bypass.Name = "LockDownBypass"
-bypass.Value = false  -- Set bypass permission
-
 config.Parent = keyCard
 level.Parent = config
-bypass.Parent = config
 ```
 
 ### Gatekeeper Configuration
