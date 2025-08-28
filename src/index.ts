@@ -1,6 +1,6 @@
 import { t } from "@rbxts/t";
-import Constants from "Constants";
-import Validators from "Validators";
+import Constants from "./Constants";
+import Validators from "./Validators";
 
 export default abstract class ClearanceController {
 	protected static _getPlayerBackpackContents(player: Player): Instance[] {
@@ -8,17 +8,39 @@ export default abstract class ClearanceController {
 	}
 
 	public static IsAKeyCard(tool: unknown): tool is KeyCard {
-		if (!t.instanceIsA("Tool")(tool)) return false;
-		if (!tool.HasTag(Constants.KEY_CARD_TAG)) return false;
-		if (!Validators.KeyCardValidator(tool)) return false;
+		if (!t.instanceIsA("Tool")(tool)) {
+			warn(`Provided keycard '${tool}' is not a tool`);
+			return false;
+		}
+
+		if (!tool.HasTag(Constants.KEY_CARD_TAG)) {
+			warn(`Provided keycard '${tool}' is not tagged with '${Constants.KEY_CARD_TAG}' tag`);
+			return false;
+		}
+
+		if (!Validators.KeyCardValidator(tool)) {
+			warn(`Provided keycard did not passed validation`);
+			return false;
+		}
 
 		return true;
 	}
 
 	public static IsAGatekeeper(instance: unknown): instance is Gatekeeper {
-		if (!t.instanceIsA("Instance")(instance)) return false;
-		if (!instance.HasTag(Constants.GATEKEEPER_TAG)) return false;
-		if (!Validators.GatekeeperValidator(instance)) return false;
+		if (!t.instanceIsA("Instance")(instance)) {
+			warn(`Provided gatekeeper '${instance}' is not an instance`);
+			return false;
+		}
+
+		if (!instance.HasTag(Constants.GATEKEEPER_TAG)) {
+			warn(`Provided gatekeeper '${instance}' is not tagged with '${Constants.GATEKEEPER_TAG}' tag`);
+			return false;
+		}
+
+		if (!Validators.GatekeeperValidator(instance)) {
+			warn(`Provided gatekeeper '${instance}' did not passed validation`);
+			return false;
+		}
 
 		return true;
 	}
@@ -50,20 +72,14 @@ export default abstract class ClearanceController {
 
 	/** Returns the clearance level of the gatekeeper instance */
 	public static GetGatekeeperClearanceLevel(gatekeeper: Gatekeeper): number {
-		if (!this.IsAGatekeeper(gatekeeper)) {
-			warn("Invalid gatekeeper provided in 'GetGatekeeperClearanceLevel'");
-			return 0;
-		}
+		if (!this.IsAGatekeeper(gatekeeper)) return 0;
 
 		return gatekeeper.GatekeeperConfig.Clearance.Value;
 	}
 
 	/** Returns an array of KeyCards the gatekeeper accepts */
 	public static GetGatekeeperKeyCards(gatekeeper: Gatekeeper): string[] {
-		if (!this.IsAGatekeeper(gatekeeper)) {
-			warn("Invalid gatekeeper provided in 'GetGatekeeperKeyCards'");
-			return [];
-		}
+		if (!this.IsAGatekeeper(gatekeeper)) return [];
 
 		const gatekeeperKeyCards: string[] = [];
 
