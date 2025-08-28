@@ -3,26 +3,23 @@ import { t } from "@rbxts/t";
 export default {
 	KeyCardValidator: t.intersection(
 		t.instanceIsA("Tool"),
-		t.interface({
+		t.children({
 			KeyCardConfig: t.intersection(
 				t.instanceIsA("Configuration"),
-				t.interface({
+				t.children({
 					Level: t.instanceIsA("NumberValue"),
 				})
 			),
 		})
 	),
 
-	GatekeeperValidator: t.intersection(
-		t.instanceIsA("Instance"),
-		t.interface({
-			GatekeeperConfig: t.intersection(
-				t.instanceIsA("Configuration"),
-				t.interface({
-					Clearance: t.instanceIsA("NumberValue"),
-					KeyCards: t.instanceIsA("Folder"),
-				})
-			),
-		})
-	),
+	GatekeeperValidator: t.children({
+		GatekeeperConfig: t.intersection(
+			t.instanceIsA("Configuration"),
+			t.children({
+				Clearance: t.instanceIsA("NumberValue"),
+				KeyCards: t.instanceIsA("Folder"),
+			})
+		),
+	}),
 } as const;
